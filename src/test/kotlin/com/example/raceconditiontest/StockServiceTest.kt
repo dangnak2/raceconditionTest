@@ -59,9 +59,12 @@ class StockServiceTest @Autowired constructor(
 
         // when
         for (i in 0 until threadCnt) {
+            val ii: Int = i;
             executorService.submit {
                 try{
-                    val port = 8080
+                    val port: Int = if(ii % 2 == 0) 8080
+                    else 8081
+
                     val forEntity: ResponseEntity<Void> = restTemplate.getForEntity(
                         "http://localhost:$port/stocks/$stockId/decrease",
                             Void::class.java
