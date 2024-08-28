@@ -3,7 +3,9 @@ package com.example.raceconditiontest
 import com.example.raceconditiontest.stock.domain.StockRepository
 import com.example.raceconditiontest.stock.domain.Stock
 import com.example.raceconditiontest.stock.service.StockService
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -23,12 +25,12 @@ class StockServiceTest @Autowired constructor(
     private var stockId: Long? = null
 
 
-//    @BeforeEach
+    @BeforeEach
     fun setUp() {
         stockId = stockRepository.saveAndFlush(Stock(1L, 100)).id
     }
 
-//    @AfterEach
+    @AfterEach
     fun tearDown() {
         stockRepository.deleteAll()
     }
@@ -61,7 +63,7 @@ class StockServiceTest @Autowired constructor(
                 try{
                     val port = 8080
                     val forEntity: ResponseEntity<Void> = restTemplate.getForEntity(
-                        "http://localhost:$port/stocks/19/decrease",
+                        "http://localhost:$port/stocks/$stockId/decrease",
                             Void::class.java
                     )
                 } finally {
@@ -72,7 +74,7 @@ class StockServiceTest @Autowired constructor(
         latch.await();
 
         //then
-        val stock: Stock = stockRepository.getById(19L)
+        val stock: Stock = stockRepository.getById(stockId!!)
         assertEquals(0, stock.quantity)
     }
 

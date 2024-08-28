@@ -9,10 +9,12 @@ import org.springframework.transaction.annotation.Transactional
 @RequiredArgsConstructor
 class StockService(private var stockRepository: StockRepository) {
 
-    @Transactional
+    //    @Transactional
     fun decrease(id: Long) {
-        val stock = stockRepository.findById(id).orElseThrow()
-        stock.decrease()
-        stockRepository.saveAndFlush(stock)
+        synchronized(this) {
+            val stock = stockRepository.findById(id).orElseThrow()
+            stock.decrease()
+            stockRepository.saveAndFlush(stock)
+        }
     }
 }
