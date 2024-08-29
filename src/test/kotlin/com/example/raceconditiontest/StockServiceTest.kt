@@ -1,5 +1,6 @@
 package com.example.raceconditiontest
 
+import com.example.raceconditiontest.stock.domain.LockStockFacade
 import com.example.raceconditiontest.stock.domain.StockRepository
 import com.example.raceconditiontest.stock.domain.Stock
 import com.example.raceconditiontest.stock.service.StockService
@@ -17,11 +18,12 @@ import java.util.concurrent.Executors
 
 @SpringBootTest
 class StockServiceTest @Autowired constructor(
-    private  var stockService: StockService,
-    private  var stockRepository: StockRepository
-    )
-{
+    private val stockService: StockService,
+    private val stockRepository: StockRepository,
+    private val lockStockFacade: LockStockFacade
 
+)
+{
     private var stockId: Long? = null
 
 
@@ -77,6 +79,33 @@ class StockServiceTest @Autowired constructor(
         latch.await();
 
         //then
+        val stock: Stock = stockRepository.getById(stockId!!)
+        assertEquals(0, stock.quantity)
+    }
+
+    @Test
+    fun decrease_with_100_request_lock_facade() {
+
+        // given
+        val threadCnt: Int = 100
+        val executorService: ExecutorService = Executors.newFixedThreadPool(32)
+        val latch: CountDownLatch = CountDownLatch(threadCnt)
+
+        //when
+        for (i in 0 until threadCnt) {
+            executorService.submit {
+                try {
+                    lockStockFacade.decrease(stockId!!)
+                } catch (e: Exception) {
+                    println(e)
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+        latch.await()
+
+        // then
         val stock: Stock = stockRepository.getById(stockId!!)
         assertEquals(0, stock.quantity)
     }
